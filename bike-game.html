@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Bike Pro</title>
+    <style>
+        body { margin: 0; background: #050505; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        
+        #game {
+            width: 800px;
+            height: 400px;
+            background: linear-gradient(to bottom, #000022 0%, #110022 100%);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #0ff;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        /* Moving City Background */
+        .city {
+            position: absolute;
+            bottom: 50px;
+            width: 200%;
+            height: 200px;
+            background-image: linear-gradient(transparent 70%, #111 70%),
+                repeating-linear-gradient(90deg, #111 0, #111 40px, transparent 40px, transparent 80px);
+            animation: moveCity 10s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes moveCity {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* The Road */
+        #road {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: #222;
+            border-top: 2px solid #0ff;
+        }
+
+        /* The Bike Shape */
+        #bike {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            width: 70px;
+            height: 30px;
+            background: #0ff;
+            clip-path: polygon(0% 100%, 20% 20%, 80% 20%, 100% 100%);
+            box-shadow: 0 0 15px #0ff;
+            z-index: 10;
+        }
+
+        .wheel {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: #000;
+            border: 2px solid #0ff;
+            border-radius: 50%;
+            bottom: -10px;
+            animation: spin 0.2s linear infinite;
+        }
+        .front { right: -5px; }
+        .back { left: -5px; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .obstacle {
+            position: absolute;
+            bottom: 50px;
+            width: 30px;
+            height: 40px;
+            background: #ff0055;
+            box-shadow: 0 0 15px #ff0055;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        #score { position: absolute; top: 20px; right: 20px; color: #0ff; font-size: 30px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game">
+    <div class="city"></div>
+    <div id="road"></div>
+    <div id="score">0</div>
+    <div id="bike">
+        <div class="wheel back"></div>
+        <div class="wheel front"></div>
+    </div>
+</div>
+
+<script>
+    const bike = document.getElementById('bike');
+    const game = document.getElementById('game');
+    const scoreVal = document.getElementById('score');
+    let isJumping = false;
+    let score = 0;
+
+    function jump() {
+        if (isJumping) return;
+        isJumping = true;
+        let alt = 0;
+        let timer = setInterval(() => {
+            if (alt >= 150) {
+                clearInterval(timer);
+                let fall = setInterval(() => {
+                    if (alt <= 0) {
+                        clearInterval(fall);
+                        isJumping = false;
+                    }
+                    alt -= 5;
+                    bike.style.bottom = (50 + alt) + 'px';
+                }, 20);
+            }
+            alt += 5;
+            bike.style.bottom = (50 + alt) + 'px';
+        }, 20);
+    }
+
+    function createObstacle() {
+        const obs = document.createElement('div');
+        obs.classList.add('obstacle');
+        game.appendChild(obs);
+        let pos = 800;
+
+        let move = setInterval(() => {
+            if (pos < -50) {
+                clearInterval(move);
+                obs.remove();
+                score++;
+                scoreVal.innerHTML = score;
+            }
+            
+            // Better Collision Check
+            let bikeBottom = parseInt(bike.style.bottom);
+            if (pos > 50 && pos < 100 && bikeBottom < 90) {
+                alert("GAME OVER! Score: " + score);
+                location.reload();
+            }
+
+            pos -= 8;
+            obs.style.left = pos + 'px';
+        }, 20);
+
+        setTimeout(createObstacle, Math.random() * 2000 + 1000);
+    }
+
+    window.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
+    createObstacle();
+</script>
+</body>
+</html>
